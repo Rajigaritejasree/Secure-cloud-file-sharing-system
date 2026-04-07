@@ -13,6 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || "0.0.0.0";
 const uploadsDir = path.join(__dirname, "uploads");
 const publicDir = path.join(__dirname, "public");
 
@@ -85,10 +86,12 @@ app.use((err, _req, res, _next) => {
 
 async function start() {
   await connectDb();
-  app.listen(PORT, () => {
-    console.log(`Secure file sharing API listening on port ${PORT}`);
+  const host = process.env.HOST || "0.0.0.0";
+  app.listen(PORT, host, () => {
+    console.log(`Secure file sharing API listening on ${host}:${PORT}`);
   });
 }
+
 
 start().catch((error) => {
   console.error("Failed to start server", error);

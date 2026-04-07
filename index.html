@@ -746,31 +746,78 @@
       }
 
       async createShareLink() {
-        const fileId = document.getElementById("link-file-id").value;
-        const expiresInHours = Number(document.getElementById("link-hours").value);
+  const fileId = document.getElementById("link-file-id").value;
+  const expiresInHours = Number(document.getElementById("link-hours").value);
 
-        if (!fileId) {
-          this.showInlineStatus("share-link-status", "Pick a file you own.", true);
-          return;
-        }
+  if (!fileId) {
+    this.showInlineStatus("share-link-status", "Pick a file you own.", true);
+    return;
+  }
 
-        try {
-          const data = await this.request(`/api/files/${fileId}/share/link`, {
-            method: "POST",
-            body: JSON.stringify({ expiresInHours }),
-          });
+  try {
+    const data = await this.request(`/api/files/${fileId}/share/link`, {
+      method: "POST",
+      body: JSON.stringify({ expiresInHours }),
+    });
 
-          const absoluteUrl = `${window.location.origin}${data.shareLink.url}`;
-          this.showInlineStatus("share-link-status", absoluteUrl, false);
-          await navigator.clipboard.writeText(absoluteUrl).catch(() => {});
-          this.showNotice("Share link created and copied if clipboard access is allowed.", "success");
-          await this.loadFiles();
-        } catch (error) {
-          const message = this.humanizeError(error);
-          this.showInlineStatus("share-link-status", message, true);
-          this.showNotice(message, "error");
-        }
-      }
+    const baseOrigin = window.location.protocol === "file:"
+      ? this.apiBase
+      : window.location.origin;
+
+    const absoluteUrl = `${baseOrigin}${data.shareLink.url}`;
+    this.showInlineStatus("share-link-status", absoluteUrl, false);
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(absoluteUrl).catch(() => {});
+      this.showNotice("Share link created and copied.", "success");
+    } else {
+      this.showNotice("Share link created. Copy it from the panel.", "success");
+    }
+
+    await this.loadFiles();
+  } catch (error) {
+    const message = this.humanizeError(error);
+    this.showInlineStatus("share-link-status", message, true);
+    this.showNotice(message, "error");
+  }
+}
+async createShareLink() {
+  const fileId = document.getElementById("link-file-id").value;
+  const expiresInHours = Number(document.getElementById("link-hours").value);
+
+  if (!fileId) {
+    this.showInlineStatus("share-link-status", "Pick a file you own.", true);
+    return;
+  }
+
+  try {
+    const data = await this.request(`/api/files/${fileId}/share/link`, {
+      method: "POST",
+      body: JSON.stringify({ expiresInHours }),
+    });
+
+    const baseOrigin = window.location.protocol === "file:"
+      ? this.apiBase
+      : window.location.origin;
+
+    const absoluteUrl = `${baseOrigin}${data.shareLink.url}`;
+    this.showInlineStatus("share-link-status", absoluteUrl, false);
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(absoluteUrl).catch(() => {});
+      this.showNotice("Share link created and copied.", "success");
+    } else {
+      this.showNotice("Share link created. Copy it from the panel.", "success");
+    }
+
+    await this.loadFiles();
+  } catch (error) {
+    const message = this.humanizeError(error);
+    this.showInlineStatus("share-link-status", message, true);
+    this.showNotice(message, "error");
+  }
+}
+
 
       async downloadFile(fileId) {
         try {
